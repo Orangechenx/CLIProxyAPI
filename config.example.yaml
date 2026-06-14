@@ -56,8 +56,8 @@ pprof:
 # If the same provider is configured as OpenAI-compatible, the native executor wins.
 # Plugin command-line flags and Management API routes are optional capabilities.
 # Existing native flags/routes and higher-priority plugin flags/routes cannot be replaced.
-# Plugin list Management API reads Logo and ConfigFields from plugin metadata for management UI display.
-# Per-plugin enabled only controls plugins.configs.<pluginID>.enabled and does not implicitly change global plugins.enabled.
+# 插件列表 Management API 会读取插件 Metadata 中的 Logo 和 ConfigFields，用于管理端展示。
+# 单插件 enabled 只控制 plugins.configs.<pluginID>.enabled，不会隐式修改全局 plugins.enabled。
 plugins:
   enabled: false
   dir: "plugins"
@@ -146,14 +146,6 @@ routing:
   session-affinity: false # default: false
   # How long session-to-auth bindings are retained. Default: 1h
   session-affinity-ttl: "1h"
-  # When true, compaction replay bypass is allowed for non-Codex upstreams
-  # that speak the OpenAI Responses API format (e.g. GPT directly, OpenRouter, etc.).
-  # Codex CLI already handles conversation compaction locally; with this
-  # enabled, the proxy forwards compaction items as-is instead of stripping
-  # them and merging the full conversation history, significantly reducing
-  # token consumption for long-running conversations.
-  # Only set to true if your upstream supports compaction items in the input.
-  allow-compaction-replay: false # default: false
 
 # Codex provider behavior.
 codex:
@@ -400,9 +392,9 @@ nonstream-keepalive-interval: 0
 #   xai:
 #     - name: "grok-4.3"
 #       alias: "grok-latest"
-#   sample-provider:                  # plugin provider keys are supported for OAuth plugins
-#     - name: "sample-model-latest"
-#       alias: "sample-latest"
+#   qoder:                            # plugin provider keys are supported for OAuth plugins
+#     - name: "qmodel_latest"
+#       alias: "qlatest"
 
 # OAuth provider excluded models
 # oauth-excluded-models:

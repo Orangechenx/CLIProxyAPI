@@ -323,7 +323,9 @@ func (h *OpenAIResponsesAPIHandler) ResponsesWebsocket(c *gin.Context) {
 		}
 
 		allowCompactionReplayBypass := false
-		if pinnedAuthID != "" {
+		if h.Cfg.AllowCompactionReplay {
+			allowCompactionReplayBypass = true
+		} else if pinnedAuthID != "" {
 			if pinnedAuth, ok := sessionAuthByID(pinnedAuthID); ok && pinnedAuth != nil {
 				allowCompactionReplayBypass = responsesWebsocketAuthSupportsCompactionReplay(pinnedAuth)
 			}

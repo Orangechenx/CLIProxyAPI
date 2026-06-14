@@ -45,6 +45,13 @@ type SDKConfig struct {
 	// Default is false (disabled).
 	PassthroughHeaders bool `yaml:"passthrough-headers" json:"passthrough-headers"`
 
+	// AllowCompactionReplay allows compaction replay bypass for non-Codex upstreams
+	// that speak the OpenAI Responses API format (e.g. GPT directly).
+	// When true, compaction items from Codex CLI are forwarded as-is instead of
+	// being stripped and replaced with full conversation history.
+	// Default is false.
+	AllowCompactionReplay bool `yaml:"allow-compaction-replay,omitempty" json:"allow-compaction-replay,omitempty"`
+
 	// Streaming configures server-side streaming behavior (keep-alives and safe bootstrap retries).
 	Streaming StreamingConfig `yaml:"streaming" json:"streaming"`
 

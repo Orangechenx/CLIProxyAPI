@@ -809,7 +809,9 @@ func (e *CodexExecutor) Execute(ctx context.Context, auth *cliproxyauth.Auth, re
 	body = helps.ApplyPayloadConfigWithRequest(e.cfg, baseModel, to.String(), from.String(), "", body, originalTranslated, requestedModel, requestPath, opts.Headers)
 	body, _ = sjson.SetBytes(body, "model", baseModel)
 	body, _ = sjson.SetBytes(body, "stream", true)
-	body, _ = sjson.DeleteBytes(body, "previous_response_id")
+	if !codexAuthHealthy(auth, baseModel) {
+		body, _ = sjson.DeleteBytes(body, "previous_response_id")
+	}
 	body, _ = sjson.DeleteBytes(body, "prompt_cache_retention")
 	body, _ = sjson.DeleteBytes(body, "safety_identifier")
 	body, _ = sjson.DeleteBytes(body, "stream_options")
@@ -1085,7 +1087,9 @@ func (e *CodexExecutor) ExecuteStream(ctx context.Context, auth *cliproxyauth.Au
 	requestedModel := helps.PayloadRequestedModel(opts, req.Model)
 	requestPath := helps.PayloadRequestPath(opts)
 	body = helps.ApplyPayloadConfigWithRequest(e.cfg, baseModel, to.String(), from.String(), "", body, originalTranslated, requestedModel, requestPath, opts.Headers)
-	body, _ = sjson.DeleteBytes(body, "previous_response_id")
+	if !codexAuthHealthy(auth, baseModel) {
+		body, _ = sjson.DeleteBytes(body, "previous_response_id")
+	}
 	body, _ = sjson.DeleteBytes(body, "prompt_cache_retention")
 	body, _ = sjson.DeleteBytes(body, "safety_identifier")
 	body, _ = sjson.DeleteBytes(body, "stream_options")
@@ -1228,7 +1232,9 @@ func (e *CodexExecutor) CountTokens(ctx context.Context, auth *cliproxyauth.Auth
 	}
 
 	body, _ = sjson.SetBytes(body, "model", baseModel)
-	body, _ = sjson.DeleteBytes(body, "previous_response_id")
+	if !codexAuthHealthy(auth, baseModel) {
+		body, _ = sjson.DeleteBytes(body, "previous_response_id")
+	}
 	body, _ = sjson.DeleteBytes(body, "prompt_cache_retention")
 	body, _ = sjson.DeleteBytes(body, "safety_identifier")
 	body, _ = sjson.DeleteBytes(body, "stream_options")
@@ -1703,6 +1709,31 @@ func normalizeCodexInstructions(body []byte) []byte {
 		body, _ = sjson.SetBytes(body, "instructions", "")
 	}
 	return body
+}
+
+// codexAuthHealthy checks whether the auth is healthy enough to continue
+// using previous_response_id for incremental savings. When the auth is
+// unhealthy (quota exceeded, unavailable), previous_response_id is stripped
+// so the next request can safely failover to another auth without getting
+// previous_response_not_found errors from the upstream.
+func codexAuthHealthy(auth *cliproxyauth.Auth, model string) bool {
+	if auth == nil || auth.Disabled || auth.Status == cliproxyauth.StatusDisabled {
+		return false
+	}
+	if auth.Unavailable {
+		return false
+	}
+	if auth.Quota.Exceeded {
+		return false
+	}
+	if model != "" {
+		if state, ok := auth.ModelStates[model]; ok && state != nil {
+			if state.Unavailable || state.Quota.Exceeded {
+				return false
+			}
+		}
+	}
+	return true
 }
 
 var imageGenToolJSON = []byte(`{"type":"image_generation","output_format":"png"}`)

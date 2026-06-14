@@ -146,6 +146,14 @@ routing:
   session-affinity: false # default: false
   # How long session-to-auth bindings are retained. Default: 1h
   session-affinity-ttl: "1h"
+  # When true, compaction replay bypass is allowed for non-Codex upstreams
+  # that speak the OpenAI Responses API format (e.g. GPT directly, OpenRouter, etc.).
+  # Codex CLI already handles conversation compaction locally; with this
+  # enabled, the proxy forwards compaction items as-is instead of stripping
+  # them and merging the full conversation history, significantly reducing
+  # token consumption for long-running conversations.
+  # Only set to true if your upstream supports compaction items in the input.
+  allow-compaction-replay: false # default: false
 
 # Codex provider behavior.
 codex:
